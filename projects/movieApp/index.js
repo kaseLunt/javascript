@@ -1,38 +1,62 @@
 // Asynchronous function to retrieve movie data from OMDB API
 const fetchData = async (searchTerm) => {
   // Send a GET request to the OMDB API with the search term and API key as parameters
-  const response = await axios.get("http://www.omdbapi.com/", {
+  const response = await axios.get('http://www.omdbapi.com/', {
     params: {
-      apikey: "7d655279",
+      apikey: '7d655279',
       s: searchTerm,
     },
   });
-  // Log the data received from the API to the console
-  console.log(response.data);
+
+  if (response.data.Error) {
+    return [];
+  }
+  return response.data.Search;
 };
 
-// Select the input element from the DOM
-const input = document.querySelector("input");
+const root = document.querySelector('.autocomplete');
+root.innerHTML = `
+  <label><b>Search For a Movie</b></label>
+  <input class="input"/>
+  <div class="dropdown">
+    <div class="dropdown-menu">
+      <div class="dropdown-content results"> </div>
+    </div>
+  </div>  
+`;
 
-// Debounce function to limit the frequency of function execution
-const debounce = (func) => {
-  let timeoutId; // Variable to hold the ID of the setTimeout function
-  return (...args) => {
-    // If a timeout is already set, clear it
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    // Set a new timeout to call the function after a delay of 1 second
-    timeoutId = setTimeout(() => {
-      func.apply(null, args); // Call the function with the provided arguments
-    }, 1000);
-  };
+const input = document.querySelector('input');
+const dropdown = document.querySelector('.dropdown');
+const resultsWrapper = document.querySelector('.results');
+
+const onInput = async (event) => {
+  const movies = await fetchData(event.target.value);
+
+  if (!movies.length) {
+    dropdown.classList.remove('is-active');
+    return;
+  }
+  resultsWrapper.innerHTML = '';
+  dropdown.classList.add('is-active');
+  for (let movie of movies) {
+    const option = document.createElement('a');
+    const imgSrc = movie.Poster === 'N/A' ? '' : movie.Poster;
+
+    option.classList.add('dropdown-item');
+    option.innerHTML = `
+      <img src = "${imgSrc}"/>
+      ${movie.Title}
+    `;
+
+    resultsWrapper.appendChild(option);
+  }
 };
-
-// Create a debounced version of the onInput function
-const onInput = debounce((event) => {
-  fetchData(event.target.value); // Fetch data based on the input value
-});
 
 // Add an event listener to the input element to call the onInput function whenever the input value changes
-input.addEventListener("input", onInput);
+input.addEventListener('input', debounce(onInput));
+
+document.addEventListener('click', (event) => {
+  if (!root.contains(event.target)) {
+    dropdown.classList.remove('is-active');
+  }
+});
