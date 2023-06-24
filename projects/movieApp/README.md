@@ -1,23 +1,58 @@
-These two JavaScript files work together to create a movie search feature using the OMDB API.
+# Autocomplete.js
 
-autocomplete.js
-This file contains the function createAutoComplete(), which is a factory function that builds a generic autocomplete feature for any type of search. This function is designed to be flexible so that it can be used with any kind of data, not just movies.
+Autocomplete.js is a lightweight, customizable JavaScript package that provides autocomplete functionality for your web applications. In this application it uses the OMDB API to fetch and display movie data, allowing users to search for movies in an autocomplete dropdown menu.
+```html
+## Installation
 
-Here's what each parameter of createAutoComplete does:
+Include the `autocomplete.js` file in your HTML file:
 
-    root: The root element where the autocomplete will be attached in the HTML.
 
-    renderOption: A function to return HTML that will render a single item in the dropdown list of autocomplete options.
+<script src="path-to-your-js-folder/autocomplete.js"></script>
 
-    onOptionSelect: A function that gets called when a user clicks on an option in the dropdown list.
+## Usage
 
-    inputValue: A function that sets the input value when a dropdown option is selected.
+To use the autocomplete functionality, create a new autocomplete instance using the createAutoComplete function:
 
-    fetchData: An asynchronous function that fetches the data from an API or other source based on the search term.
 
-index.js
-This file is using the createAutoComplete() function from autocomplete.js to create an autocomplete feature specifically for searching for movies.
+createAutoComplete({
+  root: document.querySelector('#your-element-id'), // The root HTML element for the autocomplete
+  renderOption: yourRenderOptionFunction, // Function to render each item in the dropdown
+  onOptionSelect: yourOnOptionSelectFunction, // Function to execute when an option is selected
+  inputValue: yourInputValueFunction, // Function to compute the value of the input when an option is selected
+  fetchData: yourFetchDataFunction, // Function to fetch data based on the search term
+});
 
-When the user types a movie name into the input box, the fetchData() function sends a GET request to the OMDB API and retrieves a list of movies that match the search term. These movies are then displayed in a dropdown list. The renderOption() function is used to define what each dropdown option should look like, and the inputValue() function sets the input value to the selected movie's title.
+## Functions
 
-When a movie is selected from the dropdown, the onOptionSelect() function calls onMovieSelect(), which sends another GET request to the OMDB API, this time to retrieve detailed data about the selected movie. The data is then displayed in the HTML using the movieTemplate() function, which generates the HTML for displaying the movie's details, including its poster, title, genre, plot, awards, box office earnings, Metascore, IMDB rating, and number of IMDB votes.
+    renderOption(item): Renders the HTML for each item in the dropdown.
+    onOptionSelect(item): Performs an action when an item is selected from the dropdown.
+    inputValue(item): Returns the value to populate the input field when an item is selected.
+    fetchData(searchTerm): Fetches the data to be displayed in the dropdown based on the search term.
+
+## Example
+
+Here's an example of how to use Autocomplete.js to create an autocomplete for movie search:
+
+
+createAutoComplete({
+  root: document.querySelector('#movie-search'),
+  renderOption(movie) {
+    const imgSrc = movie.Poster === 'N/A' ? '' : movie.Poster;
+    return `<img src="${imgSrc}" />${movie.Title} (${movie.Year})`;
+  },
+  onOptionSelect(movie) {
+    console.log('Movie selected:', movie.Title);
+  },
+  inputValue(movie) {
+    return movie.Title;
+  },
+  async fetchData(searchTerm) {
+    const response = await axios.get('http://www.omdbapi.com/', {
+      params: {
+        s: searchTerm,
+        apikey: 'your-omdb-api-key',
+      },
+    });
+    return response.data.Search;
+  },
+});
